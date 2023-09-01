@@ -7,23 +7,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let totalCartAmount = 0;
 
-  function renderList() {
+  async function renderList() {
     productlist.innerHTML = "";
     const apiUrl =
-      "https://crudcrud.com/api/914122a9771c4fb5bef5d534c9b5c110/productlist";
+      "https://crudcrud.com/api/3e43fe0298b9413bbc152ce82f11dd5a/productlist";
 
-    axios
-      .get(apiUrl)
-      .then((response) => {
-        const lists = response.data;
-        lists.forEach((list) => {
-          renderLists(list);
-        });
-        updateTotalCartValue();
-      })
-      .catch((error) => {
-        console.error("Error while fetching data:", error);
-      });
+    try {
+      const response = await axios.get(apiUrl);
+      const lists = response.data;
+      for (const list of lists) {
+        renderLists(list);
+      }
+      updateTotalCartValue();
+    } catch (error) {
+      console.error("Error while fetching data:", error);
+    }
   }
 
   function renderLists(list) {
@@ -36,52 +34,51 @@ document.addEventListener("DOMContentLoaded", () => {
     productlist.appendChild(item);
 
     const deleteButton = item.querySelector(".delete-button");
-    deleteButton.addEventListener("click", () => {
-      deleteList(list._id, item);
+    deleteButton.addEventListener("click", async () => {
+      await deleteList(list._id, item);
     });
 
     totalCartAmount += parseFloat(list.price);
   }
 
-  function addListToServer(list) {
+  async function addListToServer(list) {
     const apiUrl =
-      "https://crudcrud.com/api/914122a9771c4fb5bef5d534c9b5c110/productlist";
+      "https://crudcrud.com/api/3e43fe0298b9413bbc152ce82f11dd5a/productlist";
 
-    axios
-      .post(apiUrl, list)
-      .then((response) => {
-        renderLists(response.data);
-        updateTotalCartValue();
-      })
-      .catch((error) => {
-        console.error("Error adding list:", error);
-      });
+    try {
+      const response = await axios.post(apiUrl, list);
+      renderLists(response.data);
+      updateTotalCartValue();
+    } catch (error) {
+      console.error("Error adding list:", error);
+    }
   }
 
-  function deleteList(list_Id, element) {
-    const apiUrl = `https://crudcrud.com/api/914122a9771c4fb5bef5d534c9b5c110/productlist/${list_Id}`;
+  async function deleteList(list_Id, element) {
+    const apiUrl = `https://crudcrud.com/api/3e43fe0298b9413bbc152ce82f11dd5a/productlist/${list_Id}`;
 
-    axios
-      .delete(apiUrl)
-      .then(() => {
-        if (element) {
-          productlist.removeChild(element);
-          const deletedProductPrice = parseFloat(element.querySelector("p:nth-child(2)").textContent.split(":")[1]);
-          totalCartAmount -= deletedProductPrice;
-          updateTotalCartValue();
-        }
-         
-      })
-      .catch((error) => {
-        console.error("Error deleting list", error);
-      });
+    try {
+      await axios.delete(apiUrl);
+      if (element) {
+        productlist.removeChild(element);
+        const deletedProductPrice = parseFloat(
+          element.querySelector("p:nth-child(2)").textContent.split(":")[1]
+        );
+        totalCartAmount -= deletedProductPrice;
+        updateTotalCartValue();
+      }
+    } catch (error) {
+      console.error("Error deleting list", error);
+    }
   }
 
   function updateTotalCartValue() {
-    totalCartValueElement.textContent = `Total Cart Value: Rs${totalCartAmount.toFixed(2)}`;
+    totalCartValueElement.textContent = `Total Cart Value: Rs${totalCartAmount.toFixed(
+      2
+    )}`;
   }
 
-  bucket.addEventListener("submit", (e) => {
+  bucket.addEventListener("submit", async (e) => {
     e.preventDefault();
     const product = productInput.value;
     const price = priceInput.value;
@@ -90,11 +87,10 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Please fill in all required fields.");
       return;
     }
-    addListToServer({ product, price });
+    await addListToServer({ product, price });
     productInput.value = "";
     priceInput.value = "";
   });
 
   renderList();
 });
-
